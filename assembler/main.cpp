@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
         arg1[MAXLINELENGTH], arg2[MAXLINELENGTH];
 
     map<string, int> symboricAddress; // key = label, value = address
-    Instruction *instructions[MAXADDRESS];
+    Instruction *instructions[MAXADDRESS]; // all program instructions
 
     if (argc != 3)
     {
@@ -94,7 +94,15 @@ int main(int argc, char *argv[])
 
         /* have label? store label and symboric address */
         if (strcmp(label, ""))
-            symboricAddress.insert({label, i});
+        {
+            /*  true if new element inserted
+                false if key already exist */
+            if (!symboricAddress.insert({label, i}).second)
+            {
+                printf("error: label already exist");
+                exit(1);
+            }
+        }
 
         /* store instructions for use later */
         instructions[i] = new Instruction(i, label, opcode, arg0, arg1, arg2);
@@ -108,7 +116,8 @@ int main(int argc, char *argv[])
 
     for (auto instruction : instructions)
     {
-        if(!instruction) break; // end of instructions
+        if (!instruction)
+            break; // end of instructions
         int machineCode = generateMachineCode(instruction, instructions, symboricAddress);
         fprintf(outFilePtr, "%d\n", machineCode);
     }
@@ -221,7 +230,12 @@ int convertOpcodeToInterger(const char *opcode)
         return 0b111;
     }
 
-    return 0;
+    if (!strcmp(opcode, ".fill"))
+    {
+        return 0b000;
+    }
+
+    return -1;
 }
 
 /* generate machine code from given instruction */
@@ -229,6 +243,11 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
 {
     const char *opcode = instruction->getInstruction().c_str();
     int binOpcode = convertOpcodeToInterger(opcode);
+    if(binOpcode == -1) {
+        printf("error: can not define opcode");
+        exit(1);
+    }
+
     int result = 0;
     result = result | binOpcode << 22; // bits 24-22 = opcode
 
@@ -253,7 +272,13 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
         int regB = calculateField(1, instruction, instructions, symboricAddress);
         int offsetField = calculateField(2, instruction, instructions, symboricAddress);
 
-        // cout << "offsetField: " << bitset<16>(offsetField) << endl;
+        //cout << "offsetField: " << bitset<16>(offsetField) << "(" << offsetField << ")" << endl;
+        
+        if (-32768 > offsetField || offsetField > 32767)
+        {
+            printf("error: offsetField is greater than 16 bits");
+            exit(1);
+        }
 
         result = result | regA << 19;                         // bits 21-19 = regA (rs)
         result = result | regB << 16;                         // bits 18-16 = regB (rt)
@@ -298,6 +323,12 @@ int calculateField(int n, Instruction *instruction, Instruction **instructions, 
 int calculateOffsetField(string label, Instruction *instruction, Instruction **instructions, map<string, int> symboricAddress)
 {
     int address = symboricAddress[label];
+    if (!address)
+    {
+        printf("error: undefine label");
+        exit(1);
+    }
+
     Instruction *labeledInstruction = *(instructions + address);
 
     /* beq instruction address calculate */
