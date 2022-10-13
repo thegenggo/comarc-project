@@ -3,6 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
+#include <map>
+#include <string>
+
+using namespace std;
 
 #define MAXLINELENGTH 1000
 
@@ -15,6 +20,8 @@ int main(int argc, char *argv[])
     FILE *inFilePtr, *outFilePtr;
     char label[MAXLINELENGTH], opcode[MAXLINELENGTH], arg0[MAXLINELENGTH],
             arg1[MAXLINELENGTH], arg2[MAXLINELENGTH];
+
+    map<string, int> symboricAddress; // key = label, value = address
 
     if (argc != 3) {
         printf("error: usage: %s <assembly-code-file> <machine-code-file>\n",
@@ -36,15 +43,18 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    /* here is an example for how to use readAndParse to read a line from
-        inFilePtr */
-    if (! readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2) ) {
-        /* reached end of file */
+    /* read instructions from file */
+    for(int i = 0; readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2); i++) {
+        /* show address and instruction */
+        printf("%d. %s %s %s %s %s\n", i, label, opcode, arg0, arg1,arg2);
+
+        /* have label? store label and symboric address */
+        if(strcmp(label, "")) symboricAddress.insert({label, i});
     }
 
-    /* read instructions from file */
-    while(readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2)) {
-        printf("%s %s %s %s %s\n", label, opcode, arg0, arg1,arg2);
+    /* check symboric address */
+    for (auto itr = symboricAddress.begin(); itr != symboricAddress.end(); ++itr) {
+        cout << itr->first << " " << itr->second << endl;
     }
 
     /* this is how to rewind the file ptr so that you start reading from the
