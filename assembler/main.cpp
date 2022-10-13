@@ -11,10 +11,48 @@
 using namespace std;
 
 #define MAXLINELENGTH 1000
+#define MAXADDRESS 65536
+
+class Instruction
+{
+private:
+    int address;
+    string label;
+    string instruction;
+    string field[3];
+
+public:
+    Instruction(int address, string label, string instruction, string field0, string field1, string field2)
+    {
+        this->address = address;
+        this->label = label;
+        this->instruction = instruction;
+        this->field[0] = field0;
+        this->field[1] = field1;
+        this->field[2] = field2;
+    }
+
+    int getAddress()
+    {
+        return address;
+    }
+
+    string getInstruction()
+    {
+        return instruction;
+    }
+
+    string getField(int n)
+    {
+        return field[n];
+    }
+};
 
 int readAndParse(FILE *, char *, char *, char *, char *, char *);
 int isNumber(char *);
-int binOpcode(char *);
+int convertOpcodeToInterger(char *);
+int generateMachineCode(Instruction *, map<string, int>, Instruction **);
+int calculateOffsetField(Instruction *, Instruction **, map<string, int>);
 
 int main(int argc, char *argv[])
 {
@@ -24,6 +62,7 @@ int main(int argc, char *argv[])
         arg1[MAXLINELENGTH], arg2[MAXLINELENGTH];
 
     map<string, int> symboricAddress; // key = label, value = address
+    Instruction *instructions[MAXADDRESS];
 
     if (argc != 3)
     {
@@ -57,6 +96,9 @@ int main(int argc, char *argv[])
         /* have label? store label and symboric address */
         if (strcmp(label, ""))
             symboricAddress.insert({label, i});
+
+        /* store instructions for use later */
+        instructions[i] = new Instruction(i, label, opcode, arg0, arg1, arg2);
     }
 
     /* check symboric address */
@@ -65,23 +107,12 @@ int main(int argc, char *argv[])
         cout << itr->first << " " << itr->second << endl;
     }
 
-    /* this is how to rewind the file ptr so that you start reading from the
-        beginning of the file */
-    rewind(inFilePtr);
-
-    for (int i = 0; readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2); i++)
+    for (auto instruction : instructions)
     {
-        /* show address and instruction */
-        printf("%d. %s %s %s %s %s\n", i, label, opcode, arg0, arg1, arg2);
-
-        cout << bitset<3>(binOpcode(opcode)) << endl;
-    }
-
-    /* after doing a readAndParse, you may want to do the following to test the
-        opcode */
-    if (!strcmp(opcode, "add"))
-    {
-        /* do whatever you need to do for opcode "add" */
+        cout << instruction->getAddress() << ". " << instruction->getInstruction() << " " << instruction->getField(0) << " " << instruction->getField(1) << " " << instruction->getField(2) << endl;
+        int result = generateMachineCode(instruction, symboricAddress, instructions);
+        cout << bitset<32>(result) << endl;
+        cout << result << endl;
     }
 
     return (0);
@@ -139,7 +170,7 @@ int readAndParse(FILE *inFilePtr, char *label, char *opcode, char *arg0,
     return (1);
 }
 
-int isNumber(char *string)
+int isNumber(const char *string)
 {
     /* return 1 if string is a number */
     int i;
@@ -147,7 +178,7 @@ int isNumber(char *string)
 }
 
 /* convert string opcode to integer opcode */
-int binOpcode(char *opcode)
+int convertOpcodeToInterger(const char *opcode)
 {
     if (!strcmp(opcode, "add"))
     {
@@ -189,5 +220,62 @@ int binOpcode(char *opcode)
         return 0b111;
     }
 
-    return -1;
+    return 0;
+}
+
+int generateMachineCode(Instruction *instruction, map<string, int> symboricAddress, Instruction **instructions)
+{
+    const char *opcode = instruction->getInstruction().c_str();
+    string arg0 = instruction->getField(0), arg1 = instruction->getField(1), arg2 = instruction->getField(2);
+    int binOpcode = convertOpcodeToInterger(opcode);
+    int result = 0;
+    result = result | binOpcode << 22; // bits 24-22 = opcode
+
+    /* R-type instructions */
+    if (!strcmp(opcode, "add") || !strcmp(opcode, "nand"))
+    {
+        int regA = stoi(arg0);
+        int regB = stoi(arg1);
+        int destReg = stoi(arg2);
+
+        cout << regA << " " << regB << " " << destReg << endl;
+
+        result = result | regA << 19; // bits 21-19 = rs = regA
+        result = result | regB << 16; // bits 18-16 = rt = regB
+        result = result | destReg; // bits 2-0 = rd = destReg
+    }
+
+    /* I-type instructions */
+    if (!strcmp(opcode, "lw") || !strcmp(opcode, "sw") || !strcmp(opcode, "beq"))
+    {
+        int regA = stoi(arg0);
+        int regB = stoi(arg1);
+        int offsetField = isNumber(arg2.c_str()) ? stoi(arg2) : calculateOffsetField(instruction, instructions, symboricAddress);
+
+        //cout << "offsetField: " << offsetField << endl;
+
+        result = result | regA << 19;
+        result = result | regB << 16;
+        result = result | offsetField;
+    }
+
+    /* */
+
+    return result;
+}
+
+/* calculate offsetfield */
+int calculateOffsetField(Instruction *instruction, Instruction **instructions, map<string, int> symboricAddress)
+{
+    string label = instruction->getField(2);
+    int address = symboricAddress[label];
+    Instruction *labeledInstruction = *(instructions + address);
+
+    /* beq instruction address calculate */
+    if (!instruction->getInstruction().compare("beq"))
+    {
+        return labeledInstruction->getAddress() - instruction->getAddress() - 1;
+    }
+
+    return labeledInstruction->getAddress();
 }
