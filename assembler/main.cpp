@@ -1,12 +1,9 @@
-/* Assembler code fragment */
-
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <iostream>
 #include <map>
-#include <string>
 #include <bitset>
+#include <iostream>
 
 using namespace std;
 
@@ -81,6 +78,7 @@ int main(int argc, char *argv[])
         printf("error in opening %s\n", inFileString);
         exit(1);
     }
+
     outFilePtr = fopen(outFileString, "w");
     if (outFilePtr == NULL)
     {
@@ -92,7 +90,7 @@ int main(int argc, char *argv[])
     for (int i = 0; readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2); i++)
     {
         /* show address and instruction */
-        printf("%d. %s %s %s %s %s\n", i, label, opcode, arg0, arg1, arg2);
+        // printf("%d. %s %s %s %s %s\n", i, label, opcode, arg0, arg1, arg2);
 
         /* have label? store label and symboric address */
         if (strcmp(label, ""))
@@ -105,16 +103,18 @@ int main(int argc, char *argv[])
     /* check symboric address */
     for (auto itr = symboricAddress.begin(); itr != symboricAddress.end(); ++itr)
     {
-        cout << itr->first << " " << itr->second << endl;
+        // cout << itr->first << " " << itr->second << endl;
     }
 
     for (auto instruction : instructions)
     {
-        // cout << instruction->getAddress() << ". " << instruction->getInstruction() << " " << instruction->getField(0) << " " << instruction->getField(1) << " " << instruction->getField(2) << endl;
-        int result = generateMachineCode(instruction, instructions, symboricAddress);
-        // cout << bitset<32>(result) << endl;
-        // cout << result << endl;
+        if(!instruction) break; // end of instructions
+        int machineCode = generateMachineCode(instruction, instructions, symboricAddress);
+        fprintf(outFilePtr, "%d\n", machineCode);
     }
+
+    fclose(inFilePtr);
+    fclose(outFilePtr);
 
     return (0);
 }
@@ -239,7 +239,7 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
         int regB = calculateField(1, instruction, instructions, symboricAddress);
         int destReg = calculateField(2, instruction, instructions, symboricAddress);
 
-        cout << regA << " " << regB << " " << destReg << endl;
+        // cout << regA << " " << regB << " " << destReg << endl;
 
         result = result | regA << 19; // bits 21-19 = regA (rs)
         result = result | regB << 16; // bits 18-16 = regB (rt)
