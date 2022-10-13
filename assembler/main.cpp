@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     char label[MAXLINELENGTH], opcode[MAXLINELENGTH], arg0[MAXLINELENGTH],
         arg1[MAXLINELENGTH], arg2[MAXLINELENGTH];
 
-    map<string, int> symboricAddress; // key = label, value = address
+    map<string, int> symboricAddress;      // key = label, value = address
     Instruction *instructions[MAXADDRESS]; // all program instructions
 
     if (argc != 3)
@@ -187,7 +187,12 @@ int isNumber(const char *string)
     return ((sscanf(string, "%d", &i)) == 1);
 }
 
-/* convert string opcode to integer opcode */
+/*
+ * Convert string opcode to integer opcode
+ *
+ * @parameter opcode -> opcode in type string
+ * @return opcode in type integer (binary) or -1 if can't define opcode
+ */
 int convertOpcodeToInterger(const char *opcode)
 {
     if (!strcmp(opcode, "add"))
@@ -238,12 +243,21 @@ int convertOpcodeToInterger(const char *opcode)
     return -1;
 }
 
-/* generate machine code from given instruction */
+/*
+ * Generate machine code from given instruction.
+ *
+ * @parameter intruction -> instruction that is in processing
+ * @parameter intructions -> all instructions in program
+ * @parameter symboricAddress -> mapping between label and address
+ * @return machine code from instruction
+ * @exit(1) if opcode is undefined
+ */
 int generateMachineCode(Instruction *instruction, Instruction **instructions, map<string, int> symboricAddress)
 {
     const char *opcode = instruction->getInstruction().c_str();
     int binOpcode = convertOpcodeToInterger(opcode);
-    if(binOpcode == -1) {
+    if (binOpcode == -1)
+    {
         printf("error: can not define opcode");
         exit(1);
     }
@@ -272,8 +286,8 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
         int regB = calculateField(1, instruction, instructions, symboricAddress);
         int offsetField = calculateField(2, instruction, instructions, symboricAddress);
 
-        //cout << "offsetField: " << bitset<16>(offsetField) << "(" << offsetField << ")" << endl;
-        
+        // cout << "offsetField: " << bitset<16>(offsetField) << "(" << offsetField << ")" << endl;
+
         if (-32768 > offsetField || offsetField > 32767)
         {
             printf("error: offsetField is greater than 16 bits");
@@ -310,7 +324,15 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
     return result;
 }
 
-/* calculate field */
+/*
+ * Calculate value of the field.
+ *
+ * @parameter n -> field position need to calculate
+ * @parameter instruction -> instruction that is in processing
+ * @parameter intructions -> all instructions in program
+ * @parameter symboricAddress -> mapping between label and address
+ * @return value of the field in type integer (binary)
+ */
 int calculateField(int n, Instruction *instruction, Instruction **instructions, map<string, int> symboricAddress)
 {
     string arg[3];
@@ -319,7 +341,15 @@ int calculateField(int n, Instruction *instruction, Instruction **instructions, 
     return isNumber(arg[n].c_str()) ? stoi(arg[n]) : calculateOffsetField(arg[n], instruction, instructions, symboricAddress);
 }
 
-/* calculate offsetfield */
+/*
+ * Calculate offsetfield from label.
+ *
+ * @parameter label -> label name that related to other instruction
+ * @parameter instruction -> instruction that is in processing
+ * @parameter intructions -> all instructions in program
+ * @parameter symboricAddress -> mapping between label and address
+ * @return value of the field in type integer (binary)
+ */
 int calculateOffsetField(string label, Instruction *instruction, Instruction **instructions, map<string, int> symboricAddress)
 {
     int address = symboricAddress[label];
