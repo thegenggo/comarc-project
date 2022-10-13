@@ -51,8 +51,9 @@ public:
 int readAndParse(FILE *, char *, char *, char *, char *, char *);
 int isNumber(char *);
 int convertOpcodeToInterger(char *);
-int generateMachineCode(Instruction *, map<string, int>, Instruction **);
-int calculateOffsetField(Instruction *, Instruction **, map<string, int>);
+int generateMachineCode(Instruction *, Instruction **, map<string, int>);
+int calculateOffsetField(string, Instruction *, Instruction **, map<string, int>);
+int calculateField(int, Instruction *, Instruction **, map<string, int>);
 
 int main(int argc, char *argv[])
 {
@@ -109,10 +110,10 @@ int main(int argc, char *argv[])
 
     for (auto instruction : instructions)
     {
-        cout << instruction->getAddress() << ". " << instruction->getInstruction() << " " << instruction->getField(0) << " " << instruction->getField(1) << " " << instruction->getField(2) << endl;
-        int result = generateMachineCode(instruction, symboricAddress, instructions);
-        cout << bitset<32>(result) << endl;
-        cout << result << endl;
+        // cout << instruction->getAddress() << ". " << instruction->getInstruction() << " " << instruction->getField(0) << " " << instruction->getField(1) << " " << instruction->getField(2) << endl;
+        int result = generateMachineCode(instruction, instructions, symboricAddress);
+        // cout << bitset<32>(result) << endl;
+        // cout << result << endl;
     }
 
     return (0);
@@ -223,51 +224,79 @@ int convertOpcodeToInterger(const char *opcode)
     return 0;
 }
 
-int generateMachineCode(Instruction *instruction, map<string, int> symboricAddress, Instruction **instructions)
+/* generate machine code from given instruction */
+int generateMachineCode(Instruction *instruction, Instruction **instructions, map<string, int> symboricAddress)
 {
     const char *opcode = instruction->getInstruction().c_str();
-    string arg0 = instruction->getField(0), arg1 = instruction->getField(1), arg2 = instruction->getField(2);
     int binOpcode = convertOpcodeToInterger(opcode);
     int result = 0;
     result = result | binOpcode << 22; // bits 24-22 = opcode
 
-    /* R-type instructions */
+    /* R-type instructions (add, nand) */
     if (!strcmp(opcode, "add") || !strcmp(opcode, "nand"))
     {
-        int regA = stoi(arg0);
-        int regB = stoi(arg1);
-        int destReg = stoi(arg2);
+        int regA = calculateField(0, instruction, instructions, symboricAddress);
+        int regB = calculateField(1, instruction, instructions, symboricAddress);
+        int destReg = calculateField(2, instruction, instructions, symboricAddress);
 
         cout << regA << " " << regB << " " << destReg << endl;
 
-        result = result | regA << 19; // bits 21-19 = rs = regA
-        result = result | regB << 16; // bits 18-16 = rt = regB
-        result = result | destReg; // bits 2-0 = rd = destReg
+        result = result | regA << 19; // bits 21-19 = regA (rs)
+        result = result | regB << 16; // bits 18-16 = regB (rt)
+        result = result | destReg;    // bits 2-0 = destReg (rd)
     }
 
-    /* I-type instructions */
+    /* I-type instructions (lw, sw, beq) */
     if (!strcmp(opcode, "lw") || !strcmp(opcode, "sw") || !strcmp(opcode, "beq"))
     {
-        int regA = stoi(arg0);
-        int regB = stoi(arg1);
-        int offsetField = isNumber(arg2.c_str()) ? stoi(arg2) : calculateOffsetField(instruction, instructions, symboricAddress);
+        int regA = calculateField(0, instruction, instructions, symboricAddress);
+        int regB = calculateField(1, instruction, instructions, symboricAddress);
+        int offsetField = calculateField(2, instruction, instructions, symboricAddress);
 
-        //cout << "offsetField: " << offsetField << endl;
+        // cout << "offsetField: " << bitset<16>(offsetField) << endl;
 
-        result = result | regA << 19;
-        result = result | regB << 16;
-        result = result | offsetField;
+        result = result | regA << 19;                         // bits 21-19 = regA (rs)
+        result = result | regB << 16;                         // bits 18-16 = regB (rt)
+        result = result | (offsetField & 0b1111111111111111); // bits 15-0 = offsetField (2's complement)
     }
 
-    /* */
+    /* J-Type instructions (jalr) */
+    if (!strcmp(opcode, "jalr"))
+    {
+        int regA = calculateField(0, instruction, instructions, symboricAddress);
+        int regB = calculateField(1, instruction, instructions, symboricAddress);
+
+        result = result | regA << 19; // bits 21-19 = regA (rs)
+        result = result | regB << 16; // bits 18-16 = regB (rd)
+    }
+
+    /* O-type instructions (halt, noop) */
+    if (!strcmp(opcode, "halt") || !strcmp(opcode, "noop"))
+    {
+        return result;
+    }
+
+    /* fill instruction */
+    if (!strcmp(opcode, ".fill"))
+    {
+        result = calculateField(0, instruction, instructions, symboricAddress);
+    }
 
     return result;
 }
 
-/* calculate offsetfield */
-int calculateOffsetField(Instruction *instruction, Instruction **instructions, map<string, int> symboricAddress)
+/* calculate field */
+int calculateField(int n, Instruction *instruction, Instruction **instructions, map<string, int> symboricAddress)
 {
-    string label = instruction->getField(2);
+    string arg[3];
+    arg[0] = instruction->getField(0), arg[1] = instruction->getField(1), arg[2] = instruction->getField(2);
+
+    return isNumber(arg[n].c_str()) ? stoi(arg[n]) : calculateOffsetField(arg[n], instruction, instructions, symboricAddress);
+}
+
+/* calculate offsetfield */
+int calculateOffsetField(string label, Instruction *instruction, Instruction **instructions, map<string, int> symboricAddress)
+{
     int address = symboricAddress[label];
     Instruction *labeledInstruction = *(instructions + address);
 
