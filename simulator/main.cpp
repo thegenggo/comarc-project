@@ -21,6 +21,7 @@ void printState(stateType *);
 int main(int argc, char *argv[])
 {
     char line[MAXLINELENGTH];
+    int insCount = 0;
     stateType state;
     FILE *filePtr;
 
@@ -59,6 +60,7 @@ int main(int argc, char *argv[])
         int opcode = (state.mem[state.pc] >> 22) & 0b111;
         int regA = (state.mem[state.pc] >> 19) & 0b111;
         int regB = (state.mem[state.pc] >> 16) & 0b111;
+        insCount++;
 
         printState(&state);
         // Add
@@ -127,9 +129,11 @@ int main(int argc, char *argv[])
 
         state.pc++;
     }
-    // printState(&state);
-    // // cout << bitset<3>((state.mem[state.pc]>>22) & 0b111);
-    // printState(&state);
+    cout << "machine halted" << endl;
+    cout << "total of " << insCount << " instructions executed" << endl;
+    cout << "final state of machine:"  << endl;
+    printState(&state);
+
 
     return (0);
 }
