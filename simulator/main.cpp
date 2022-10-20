@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
         {
 
         }
-
+        state.reg[0] = 0;
         state.pc++;
     }
     cout << "machine halted" << endl;
