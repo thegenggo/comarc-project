@@ -241,7 +241,8 @@ int convertOpcodeToInterger(const char *opcode)
         return 0b000;
     }
 
-    return -1;
+    printf("error: can not define opcode");
+    exit(1);
 }
 
 /*
@@ -257,11 +258,6 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
 {
     const char *opcode = instruction->getInstruction().c_str();
     int binOpcode = convertOpcodeToInterger(opcode);
-    if (binOpcode == -1)
-    {
-        printf("error: can not define opcode");
-        exit(1);
-    }
 
     int result = 0;
     result = result | binOpcode << 22; // bits 24-22 = opcode
