@@ -113,7 +113,6 @@ int main(int argc, char *argv[])
         {
             state.reg[regB] = state.pc + 1;
             state.pc = state.reg[regA];
-            continue;
         }
         //halt
         if (opcode == 0b110)
@@ -127,7 +126,7 @@ int main(int argc, char *argv[])
 
         }
         state.reg[0] = 0;
-        state.pc++;
+        if (opcode != 0b101) state.pc++;    // Increment PC if operation is not jalr
     }
     cout << "machine halted" << endl;
     cout << "total of " << insCount << " instructions executed" << endl;
