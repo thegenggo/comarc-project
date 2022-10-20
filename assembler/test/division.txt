@@ -1,0 +1,20 @@
+        lw      0   1   qtient      load reg1 with quotient
+        lw      0   2   dend        load reg2 with dividend
+        lw      0   3   divis       load reg3 with divisor
+        lw      0   4   one         load reg4 with 1
+        lw      0   5   chkNeg      load reg5 with check negative bit
+        lw      0   6   neg1        load reg 6 with -1
+        nand    3   3   3           two's compliment reg2 (divisor)
+        add     3   4   3           reg2 = -divisor
+loop    add     2   3   2           reg2 = reg2 - reg3
+        nand    2   5   7           reg7 = reg2 nand with check negative bit
+        add     1   4   1           quotient += 1(reg4)
+        beq     7   6   loop        go to loop if reg7 == -1
+        add     1   6   1           quotient - 1 when end program
+end     halt         
+dend    .fill   1025
+divis   .fill   25
+qtient  .fill   0
+one     .fill   1
+chkNeg  .fill   32768
+neg1    .fill   -1
