@@ -197,7 +197,8 @@ int isNumber(const char *string)
  * Convert string opcode to integer opcode
  *
  * @parameter opcode -> opcode in type string
- * @return opcode in type integer (binary) or -1 if can't define opcode
+ * @return opcode in type integer (binary)
+ * @exit(1) opcode is undefined
  */
 int convertOpcodeToInterger(const char *opcode)
 {
