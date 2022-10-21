@@ -97,20 +97,22 @@ int main(int argc, char *argv[])
             /*  label already exist */
             if (!symboricAddress.insert({label, i}).second)
             {
-                printf("error: label already exist.");
+                printf("error: label already exist.\n");
                 exit(1);
             }
 
             /* label cant have more than 6 characters*/
             if (strlen(label) > 6)
             {
-                printf("error: label must have less than or equal 6 characters.");
+                printf("error: label must have less than or equal 6 characters.\n");
+                exit(1);
             }
 
             /* label must start with alphabet */
             if (!isalpha(label[0]))
             {
-                printf("error: label must start with alphabet.");
+                printf("error: label must start with alphabet.\n");
+                exit(1);
             }
         }
 
@@ -255,7 +257,7 @@ int convertOpcodeToInterger(const char *opcode)
  * @parameter intructions -> all instructions in program
  * @parameter symboricAddress -> mapping between label and address
  * @return machine code from instruction
- * @exit(1) if opcode is undefined
+ * @exit(1) have error
  */
 int generateMachineCode(Instruction *instruction, Instruction **instructions, map<string, int> symboricAddress)
 {
@@ -272,6 +274,12 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
         int regB = calculateField(1, instruction, instructions, symboricAddress);
         int destReg = calculateField(2, instruction, instructions, symboricAddress);
 
+        if(regA > 8 || regA < 0 || regB > 8 || regB < 0 || destReg > 8 || destReg < 0)
+        {
+            printf("error: SMC have only 8 registers.");
+            exit(1);
+        }
+
         result = result | regA << 19; // bits 21-19 = regA (rs)
         result = result | regB << 16; // bits 18-16 = regB (rt)
         result = result | destReg;    // bits 2-0 = destReg (rd)
@@ -283,6 +291,12 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
         int regA = calculateField(0, instruction, instructions, symboricAddress);
         int regB = calculateField(1, instruction, instructions, symboricAddress);
         int offsetField = calculateField(2, instruction, instructions, symboricAddress);
+
+        if(regA > 8 || regA < 0 || regB > 8 || regB < 0)
+        {
+            printf("error: SMC have only 8 registers.");
+            exit(1);
+        }
 
         if (-32768 > offsetField || offsetField > 32767)
         {
@@ -300,6 +314,12 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
     {
         int regA = calculateField(0, instruction, instructions, symboricAddress);
         int regB = calculateField(1, instruction, instructions, symboricAddress);
+
+        if(regA > 8 || regA < 0 || regB > 8 || regB < 0)
+        {
+            printf("error: SMC have only 8 registers.");
+            exit(1);
+        }
 
         result = result | regA << 19; // bits 21-19 = regA (rs)
         result = result | regB << 16; // bits 18-16 = regB (rd)
