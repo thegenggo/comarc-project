@@ -90,18 +90,26 @@ int main(int argc, char *argv[])
     /* read instructions from file */
     for (int i = 0; readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2); i++)
     {
-        /* show address and instruction */
-        // printf("%d. %s %s %s %s %s\n", i, label, opcode, arg0, arg1, arg2);
-
         /* have label? store label and symboric address */
         if (strcmp(label, ""))
         {
-            /*  true if new element inserted
-                false if key already exist */
+            /*  label already exist */
             if (!symboricAddress.insert({label, i}).second)
             {
-                printf("error: label already exist");
+                printf("error: label already exist.");
                 exit(1);
+            }
+
+            /* label cant have more than 6 characters*/
+            if (strlen(label) > 6)
+            {
+                printf("error: label must have least than or equal 6 characters.");
+            }
+
+            /* label must start with alphabet */
+            if (strlen(label) > 6)
+            {
+                printf("error: label must start with alphabet.");
             }
         }
 
@@ -109,12 +117,7 @@ int main(int argc, char *argv[])
         instructions[i] = new Instruction(i, label, opcode, arg0, arg1, arg2);
     }
 
-    /* check symboric address */
-    for (auto itr = symboricAddress.begin(); itr != symboricAddress.end(); ++itr)
-    {
-        // cout << itr->first << " " << itr->second << endl;
-    }
-
+    /* generate machine code from stored instructions */
     for (auto instruction : instructions)
     {
         if (!instruction)
@@ -241,7 +244,8 @@ int convertOpcodeToInterger(const char *opcode)
         return 0b000;
     }
 
-    return -1;
+    printf("error: opcode is not define.");
+    exit(1);
 }
 
 /*
@@ -257,11 +261,6 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
 {
     const char *opcode = instruction->getInstruction().c_str();
     int binOpcode = convertOpcodeToInterger(opcode);
-    if (binOpcode == -1)
-    {
-        printf("error: can not define opcode");
-        exit(1);
-    }
 
     int result = 0;
     result = result | binOpcode << 22; // bits 24-22 = opcode
@@ -272,8 +271,6 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
         int regA = calculateField(0, instruction, instructions, symboricAddress);
         int regB = calculateField(1, instruction, instructions, symboricAddress);
         int destReg = calculateField(2, instruction, instructions, symboricAddress);
-
-        // cout << regA << " " << regB << " " << destReg << endl;
 
         result = result | regA << 19; // bits 21-19 = regA (rs)
         result = result | regB << 16; // bits 18-16 = regB (rt)
@@ -286,8 +283,6 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
         int regA = calculateField(0, instruction, instructions, symboricAddress);
         int regB = calculateField(1, instruction, instructions, symboricAddress);
         int offsetField = calculateField(2, instruction, instructions, symboricAddress);
-
-        // cout << "offsetField: " << bitset<16>(offsetField) << "(" << offsetField << ")" << endl;
 
         if (-32768 > offsetField || offsetField > 32767)
         {
@@ -316,7 +311,7 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
         return result;
     }
 
-    /* fill instruction */
+    /* .fill instruction */
     if (!strcmp(opcode, ".fill"))
     {
         result = calculateField(0, instruction, instructions, symboricAddress);
