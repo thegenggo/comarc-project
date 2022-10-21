@@ -3,7 +3,6 @@
 #include <string.h>
 #include <map>
 #include <bitset>
-#include <iostream>
 #include <string>
 
 using namespace std;
@@ -51,7 +50,6 @@ int isNumber(char *);
 int convertOpcodeToInterger(char *);
 int generateMachineCode(Instruction *, Instruction **, map<string, int>);
 int calculateOffsetField(string, Instruction *, Instruction **, map<string, int>);
-int calculateField(int, Instruction *, Instruction **, map<string, int>);
 
 int main(int argc, char *argv[])
 {
@@ -271,9 +269,9 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
     /* R-type instructions (add, nand) */
     if (!strcmp(opcode, "add") || !strcmp(opcode, "nand"))
     {
-        int regA = calculateField(0, instruction, instructions, symboricAddress);
-        int regB = calculateField(1, instruction, instructions, symboricAddress);
-        int destReg = calculateField(2, instruction, instructions, symboricAddress);
+        int regA = stoi(instruction->getField(0));
+        int regB = stoi(instruction->getField(1));
+        int destReg = stoi(instruction->getField(2));
 
         if(regA > 8 || regA < 0 || regB > 8 || regB < 0 || destReg > 8 || destReg < 0)
         {
@@ -289,9 +287,11 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
     /* I-type instructions (lw, sw, beq) */
     if (!strcmp(opcode, "lw") || !strcmp(opcode, "sw") || !strcmp(opcode, "beq"))
     {
-        int regA = calculateField(0, instruction, instructions, symboricAddress);
-        int regB = calculateField(1, instruction, instructions, symboricAddress);
-        int offsetField = calculateField(2, instruction, instructions, symboricAddress);
+        int regA = stoi(instruction->getField(0));
+        int regB = stoi(instruction->getField(1));
+        int offsetField = isNumber(instruction->getField(2).c_str()) ? 
+            stoi(instruction->getField(2)) : 
+            calculateOffsetField(instruction->getField(2), instruction, instructions, symboricAddress);
 
         if(regA > 8 || regA < 0 || regB > 8 || regB < 0)
         {
@@ -313,8 +313,8 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
     /* J-Type instructions (jalr) */
     if (!strcmp(opcode, "jalr"))
     {
-        int regA = calculateField(0, instruction, instructions, symboricAddress);
-        int regB = calculateField(1, instruction, instructions, symboricAddress);
+        int regA = stoi(instruction->getField(0));
+        int regB = stoi(instruction->getField(1));
 
         if(regA > 8 || regA < 0 || regB > 8 || regB < 0)
         {
@@ -335,27 +335,12 @@ int generateMachineCode(Instruction *instruction, Instruction **instructions, ma
     /* .fill instruction */
     if (!strcmp(opcode, ".fill"))
     {
-        result = calculateField(0, instruction, instructions, symboricAddress);
+        result = isNumber(instruction->getField(0).c_str()) ? 
+            stoi(instruction->getField(0)) : 
+            calculateOffsetField(instruction->getField(0), instruction, instructions, symboricAddress);
     }
 
     return result;
-}
-
-/*
- * Calculate value of the field.
- *
- * @parameter n -> field position need to calculate
- * @parameter instruction -> instruction that is in processing
- * @parameter intructions -> all instructions in program
- * @parameter symboricAddress -> mapping between label and address
- * @return value of the field in type integer (binary)
- */
-int calculateField(int n, Instruction *instruction, Instruction **instructions, map<string, int> symboricAddress)
-{
-    string arg[3];
-    arg[0] = instruction->getField(0), arg[1] = instruction->getField(1), arg[2] = instruction->getField(2);
-
-    return isNumber(arg[n].c_str()) ? stoi(arg[n]) : calculateOffsetField(arg[n], instruction, instructions, symboricAddress);
 }
 
 /*
