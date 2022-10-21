@@ -1,0 +1,48 @@
+        lw      0   1   n       ; $1 = n
+        lw      0   2   r       ; $2 = r
+        lw      0   6   combA
+        jalr    6   7           ; Jump to combination with return address $7 (Combination(n,r))
+        halt
+comb    noop                    ; ------ Add items to stack  ------ { bottom [return , n, r] top }
+        lw      0   6   pos1
+        sw      5   7   stack   ; Add return address to stack
+        add     5   6   5       ; Increase stack pointer
+        sw      5   1   stack   ; Add n to stack
+        add     5   6   5       ; Increase stack pointer
+        sw      5   2   stack   ; Add r to stack
+        add     5   6   5       ; Increase stack pointer                
+        noop                    ; ---------------------------------
+        beq     2   0   combB   ; If r == 0 or ...
+        beq     1   2   combB   ; n == r, do the base case
+        noop                    ; Otherwise
+        lw      0   6   neg1
+        add     1   6   1       ; n--
+        lw      0   6   combA
+        jalr    6   7           ; Jump to combination with return address $7 (Combination(n-1,r))
+        lw      0   6   neg1
+        add     2   6   2       ; r--
+        lw      0   6   combA
+        jalr    6   7           ; Jump to combination with return address $7 (Combination(n-1,r-1))
+        beq     0   0   recovS
+combB   noop                    ; -------- Base condition ---------
+        lw      0   6   pos1
+        add     3   6   3       ; result++
+        noop                    ; ---------------------------------
+recovS  noop                    ; --------Recover the stack ---------
+        lw      0   6   neg1
+        add     5   6   5       ; Decrease stack pointer
+        lw      5   2   stack   ; Recover r from the stack
+        add     5   6   5       ; Decrease stack pointer
+        lw      5   1   stack   ; Recover n from the stack
+        add     5   6   5       ; Decrease stack pointer
+        lw      5   7   stack   ; Recover return address from the stack
+        jalr    7   0           ; return
+        noop                    ; ---------------------------------
+        noop                    ; Variables
+n       .fill       4           ; n
+r       .fill       1           ; r
+combA   .fill       comb
+combBA  .fill       combB
+pos1    .fill       1           ; Value for +1
+neg1    .fill       -1          ; Value for -1
+stack   .fill       0

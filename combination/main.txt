@@ -1,0 +1,40 @@
+        lw      0   1   n
+        lw      0   2   r
+        lw      0   6   combA
+        jalr    6   7 
+        halt
+comb    lw      0   6   pos1
+        sw      5   7   stack
+        add     5   6   5
+        sw      5   1   stack
+        add     5   6   5
+        sw      5   2   stack
+        add     5   6   5
+        beq     2   0   combB
+        beq     1   2   combB
+        lw      0   6   neg1
+        add     1   6   1
+        lw      0   6   combA
+        jalr    6   7
+        lw      0   6   neg1
+        add     2   6   2
+        lw      0   6   combA
+        jalr    6   7
+        beq     0   0   recovS
+combB   lw      0   6   pos1
+        add     3   6   3
+recovS  lw      0   6   neg1
+        add     5   6   5
+        lw      5   2   stack
+        add     5   6   5
+        lw      5   1   stack
+        add     5   6   5
+        lw      5   7   stack
+        jalr    7   0
+n       .fill       4
+r       .fill       1
+combA   .fill       comb
+combBA  .fill       combB
+pos1    .fill       1
+neg1    .fill       -1
+stack   .fill       0

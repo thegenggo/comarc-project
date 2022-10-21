@@ -1,0 +1,18 @@
+    lw     0    2   mcand       load reg2 with mcand
+    lw     0    3   mplier      load reg3 with mplier
+    lw     0    4   count       load reg4 with count
+    lw     0    6   neg1        load reg6 with neg1
+    lw     0    7   lcount      load reg7 with lcount
+loop       nand     3   4   5   mplier NAND 2^i
+    beq    5    6   1           NAND Result != 1 --> don't adding mcand
+    add    2    1   1           Adding mcand to Result
+    beq    4    7   done        Check if last count end program 
+    add    2    2   2           Shift left mcand
+    add    4    4   4           Shift left count
+    beq    0    0   loop        Back to loop
+done       halt  
+mcand      .fill    32766
+mplier     .fill    10383
+count      .fill    1
+neg1       .fill    -1
+lcount     .fill    16384

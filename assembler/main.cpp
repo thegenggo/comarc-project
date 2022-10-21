@@ -244,7 +244,11 @@ int convertOpcodeToInterger(const char *opcode)
         return 0b000;
     }
 
+<<<<<<< HEAD
     printf("error: opcode is not define.");
+=======
+    printf("error: can not define opcode");
+>>>>>>> 0da4018066ee3db92972d75d05412209a5c82818
     exit(1);
 }
 
