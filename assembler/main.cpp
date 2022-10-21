@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
 
     map<string, int> symboricAddress;      // key = label, value = address
     Instruction *instructions[MAXADDRESS]; // all program instructions
+    int numInst; // number of instrunctions
 
     if (argc != 3)
     {
@@ -103,7 +104,7 @@ int main(int argc, char *argv[])
             /* label cant have more than 6 characters*/
             if (strlen(label) > 6)
             {
-                printf("error: label must have least than or equal 6 characters.");
+                printf("error: label must have less than or equal 6 characters.");
             }
 
             /* label must start with alphabet */
@@ -115,14 +116,13 @@ int main(int argc, char *argv[])
 
         /* store instructions for use later */
         instructions[i] = new Instruction(i, label, opcode, arg0, arg1, arg2);
+        numInst++;
     }
 
     /* generate machine code from stored instructions */
-    for (auto instruction : instructions)
+    for (int i = 0; i < numInst; i++)
     {
-        if (!instruction)
-            break; // end of instructions
-        int machineCode = generateMachineCode(instruction, instructions, symboricAddress);
+        int machineCode = generateMachineCode(instructions[i], instructions, symboricAddress);
         fprintf(outFilePtr, "%d\n", machineCode);
     }
 
