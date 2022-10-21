@@ -4,7 +4,7 @@
         lw      0   4   one         load reg4 with 1
         lw      0   5   chkNeg      load reg5 with check negative bit
         lw      0   6   neg1        load reg 6 with -1
-        nand    3   3   3           two's compliment reg2 (divisor)
+        nand    3   3   3           two's complement reg2 (divisor)
         add     3   4   3           reg2 = -divisor
 loop    add     2   3   2           reg2 = reg2 - reg3
         nand    2   5   7           reg7 = reg2 nand with check negative bit
