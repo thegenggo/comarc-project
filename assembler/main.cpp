@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
             }
 
             /* label must start with alphabet */
-            if (strlen(label) > 6)
+            if (!isalpha(label[0]))
             {
                 printf("error: label must start with alphabet.");
             }
