@@ -15,8 +15,8 @@ loop    add     2   3   2           reg2 = reg2 - reg3
         beq     0   0   end
 undef   add 0   6   1
 end     halt         
-dend    .fill   1000
-divis   .fill   25
+dend    .fill   -25
+divis   .fill   3
 qtient  .fill   0
 one     .fill   1
 chkNeg  .fill   32768
